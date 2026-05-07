@@ -1,17 +1,21 @@
 "use client";
 import { useState } from "react";
 import { Copy } from "lucide-react";
+import { DropdownMenuDemo } from "../components/dropDown";
+import { AlertDialog } from "../components/ui/alert-dialog";
 
 export default function Home() {
   const [inputUrl, setInputUrl] = useState("");
   const [shortUrl, setShortUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
   async function handleShorten() {
     if (!inputUrl) return;
     setLoading(true);
     setError("");
+    setShowErrorDialog(false);
     try {
       const res = await fetch("http://localhost:8080/api/urls/shorten", {
         method: "POST",
@@ -24,13 +28,17 @@ export default function Home() {
       console.warn("Response from server:", data);
 
       if (!res.ok) {
-        setError(data.message || "Something went wrong");
+        const errorMessage = data.message || "Something went wrong";
+        setError(errorMessage);
+        setShowErrorDialog(true);
         return;
       }
 
       setShortUrl(data.data.short_url ?? ""); 
     } catch (err) {
-      setError("Failed to connect to server");
+      const errorMessage = "Failed to connect to server";
+      setError(errorMessage);
+      setShowErrorDialog(true);
     } finally {
       setLoading(false);
     }
@@ -43,7 +51,17 @@ export default function Home() {
 
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-orange-100 px-4 py-10">
+    <div className="relative flex min-h-screen items-center justify-center bg-orange-100 px-4 py-10">
+      <AlertDialog
+        open={showErrorDialog}
+        onOpenChange={setShowErrorDialog}
+        title="Error"
+        description={error}
+        confirmText="OK"
+      />
+      <div className="absolute top-10 left-10">
+        <DropdownMenuDemo />
+      </div>
       <div className="w-full max-w-6xl rounded-4xl bg-yellow-50 px-8 py-10 shadow-[0_30px_40px_rgba(15,23,42,0.2)] text-[#04172f]">
         <h2 className="text-2xl font-semibold">Shorten a long link</h2>
         <label className="mt-4 block font-medium text-slate-600">
